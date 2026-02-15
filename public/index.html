@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Technical Intervention Manager</title>
+    <style>
+        body { font-family: Arial; margin: 40px; }
+        input, select, button { margin: 5px; }
+    </style>
+</head>
+<body>
+
+<h1>Technical Intervention Manager</h1>
+
+<h2>Admin - Create Intervention</h2>
+<input id="title" placeholder="Intervention Title">
+<input id="technician" placeholder="Technician Name">
+<button onclick="createIntervention()">Create</button>
+
+<h2>Technician - View My Interventions</h2>
+<input id="techName" placeholder="Technician Name">
+<button onclick="loadInterventions()">Load</button>
+
+<ul id="list"></ul>
+
+<script>
+async function createIntervention() {
+    const title = document.getElementById("title").value;
+    const technician = document.getElementById("technician").value;
+
+    await fetch("/interventions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title, technician })
+    });
+
+    alert("Intervention Created");
+}
+
+async function loadInterventions() {
+    const tech = document.getElementById("techName").value;
+    const res = await fetch(`/interventions/${tech}`);
+    const data = await res.json();
+
+    const list = document.getElementById("list");
+    list.innerHTML = "";
+
+    data.forEach(i => {
+        const li = document.createElement("li");
+        li.innerHTML = `
+            ${i.title} - ${i.status}
+            <select onchange="updateStatus(${i.id}, this.value)">
+                <option>To Do</option>
+                <option>In Progress</option>
+                <option>Done</option>
+            </select>
+        `;
+        list.appendChild(li);
+    });
+}
+
+async function updateStatus(id, status) {
+    await fetch(`/interventions/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status })
+    });
+
+    loadInterventions();
+}
+</script>
+
+</body>
+</html>
